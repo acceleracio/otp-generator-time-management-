@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Generator - Admin Panel</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .header { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin: 0; }
+        .admin-panel { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 8px; 
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 5px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        input:focus { border-color: #28a745; outline: none; }
+        button { 
+            background: #28a745; 
+            color: white; 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover { background: #218838; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #result { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #28a745; 
+            border-radius: 8px; 
+            background: #d4edda; 
+            display: none; 
+            text-align: center;
+        }
+        #generatedOTP { 
+            font-size: 36px; 
+            font-weight: bold; 
+            color: #155724; 
+            margin: 15px 0; 
+            letter-spacing: 3px;
+            font-family: monospace;
+        }
+        .error { color: #dc3545; background: #f8d7da; border-color: #dc3545; }
+        .success { color: #155724; }
+        #activeOTPs { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .otp-item { 
+            padding: 15px; 
+            margin: 10px 0; 
+            background: #f8f9fa; 
+            border-radius: 5px; 
+            border-left: 4px solid #007bff;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .otp-details { flex-grow: 1; }
+        .otp-code { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #007bff; 
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .otp-email { font-weight: bold; color: #333; }
+        .otp-time { color: #666; font-size: 12px; }
+        .delete-btn { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        .delete-btn:hover { background: #c82333; }
+        .refresh-btn { 
+            background: #17a2b8; 
+            margin-bottom: 20px; 
+            width: auto;
+            padding: 10px 20px;
+        }
+        .refresh-btn:hover { background: #138496; }
+        .stats { 
+            display: flex; 
+            justify-content: space-around; 
+            background: #e9ecef; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 15px 0;
+        }
+        .stat-item { text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+        .stat-label { font-size: 12px; color: #666; }
+        .loading { 
+            display: none; 
+            text-align: center; 
+            margin: 10px 0; 
+            color: #666;
+        }
+        .spinner { 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #28a745; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            animation: spin 1s linear infinite; 
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .no-otps { 
+            text-align: center; 
+            color: #666; 
+            padding: 30px; 
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ OTP Generator - Admin Panel</h1>
+        <p>Generate secure OTPs for Budget Dashboard access</p>
+    </div>
+    
+    <div class="admin-panel">
+        <h2>Generate New OTP</h2>
+        <div class="form-group">
+            <label for="emailInput">User Email Address:</label>
+            <input type="email" id="emailInput" placeholder="Enter user's email address" required>
+        </div>
+        
+        <button onclick="generateOTP()" id="generateBtn">🔐 Generate OTP</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>Generating OTP...
+        </div>
+        
+        <div id="result">
+            <div id="message"></div>
+            <div id="generatedOTP"></div>
+            <p><strong>⏰ OTP expires in 10 minutes</strong></p>
+            <p style="font-size: 14px; color: #666;">
+                Share this OTP with the user for Budget Dashboard access<br>
+                Each OTP can only be used once
+            </p>
+        </div>
+    </div>
+
+    <div id="activeOTPs">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Active OTPs</h2>
+            <button onclick="loadActiveOTPs()" class="refresh-btn">🔄 Refresh</button>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalOTPs">0</div>
+                <div class="stat-label">Active OTPs</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="expiringSoon">0</div>
+                <div class="stat-label">Expiring Soon</div>
+            </div>
+        </div>
+        
+        <div id="otpList"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPeNlcSpTe2oOySKcdfh9ykQzHVTDSwzk",
+            authDomain: "otp-gen-4d684.firebaseapp.com",
+            projectId: "otp-gen-4d684",
+            storageBucket: "otp-gen-4d684.firebasestorage.app",
+            messagingSenderId: "1092826485280",
+            appId: "1:1092826485280:web:1a2b5b38f002a793246245"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let realTimeListener = null;
+
+        // Show loading state
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('generateBtn').disabled = show;
+        }
+
+        // Generate cryptographically secure OTP
+        function generateSecureOTP() {
+            const array = new Uint32Array(1);
+            crypto.getRandomValues(array);
+            return String(array[0]).slice(-6).padStart(6, '0');
+        }
+
+        window.generateOTP = async function() {
+            const email = document.getElementById('emailInput').value.trim().toLowerCase();
+            const resultDiv = document.getElementById('result');
+            const messageDiv = document.getElementById('message');
+            const otpDiv = document.getElementById('generatedOTP');
+
+            // Clear previous results
+            resultDiv.className = '';
+            messageDiv.innerHTML = '';
+            otpDiv.textContent = '';
+
+            if (!email) {
+                messageDiv.innerHTML = '<span class="error">Please enter a valid email address</span>';
+                resultDiv.className = 'error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                messageDiv.innerHTML = '<span class="error">Please enter a valid email format</span>';
+                resultDiv.className = 'error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                // Generate cryptographically secure 6-digit OTP
+                const otp = generateSecureOTP();
+                const timestamp = new Date().getTime();
+                const generated = new Date().toISOString();
+                
+                // Create document ID from email (replace @ and . with underscores)
+                const docId = email.replace('@', '_').replace(/\./g, '_');
+                
+                // Check if OTP already exists for this email
+                const existingDoc = await doc(db, 'otps', docId);
+                
+                // Store OTP in Firestore (overwrites existing)
+                await setDoc(doc(db, 'otps', docId), {
+                    email: email,
+                    otp: otp,
+                    timestamp: timestamp,
+                    generated: generated,
+                    adminGenerated: true,
+                    used: false
+                });
+
+                messageDiv.innerHTML = '<span class="success">✅ OTP generated successfully for: <strong>' + email + '</strong></span>';
+                otpDiv.textContent = otp;
+                resultDiv.style.display = 'block';
+                
+                // Clear input
+                document.getElementById('emailInput').value = '';
+                
+                // Auto-hide result after 30 seconds for security
+                setTimeout(() => {
+                    if (resultDiv.style.display === 'block') {
+                        resultDiv.style.display = 'none';
+                    }
+                }, 30000);
+                
+            } catch (error) {
+                console.error('Error generating OTP:', error);
+                messageDiv.innerHTML = '<span class="error">❌ Error generating OTP. Please try again.</span>';
+                resultDiv.className = 'error';
+                resultDiv.style.display = 'block';
+            }
+
+            showLoading(false);
+        };
+
+        window.loadActiveOTPs = async function() {
+            const otpListDiv = document.getElementById('otpList');
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, 'otps'));
+                const now = new Date().getTime();
+                let activeOTPs = [];
+                let expiredOTPs = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const timeDiff = now - data.timestamp;
+                    
+                    if (timeDiff <= 600000) { // Still valid (10 minutes)
+                        const timeLeft = Math.ceil((600000 - timeDiff) / 1000);
+                        activeOTPs.push({
+                            id: doc.id,
+                            ...data,
+                            timeLeft: timeLeft,
+                            expiringSoon: timeLeft < 300 // Less than 5 minutes
+                        });
+                    } else {
+                        // Mark for deletion
+                        expiredOTPs.push(doc.id);
+                    }
+                });
+
+                // Delete expired OTPs
+                for (const expiredId of expiredOTPs) {
+                    try {
+                        await deleteDoc(doc(db, 'otps', expiredId));
+                    } catch (deleteError) {
+                        console.error('Error deleting expired OTP:', deleteError);
+                    }
+                }
+
+                // Update statistics
+                document.getElementById('totalOTPs').textContent = activeOTPs.length;
+                document.getElementById('expiringSoon').textContent = activeOTPs.filter(otp => otp.expiringSoon).length;
+                
+                if (activeOTPs.length === 0) {
+                    otpListDiv.innerHTML = '<div class="no-otps">📭 No active OTPs<br><small>Generated OTPs will appear here</small></div>';
+                } else {
+                    // Sort by time left (expiring first)
+                    activeOTPs.sort((a, b) => a.timeLeft - b.timeLeft);
+                    
+                    otpListDiv.innerHTML = activeOTPs.map(otp => {
+                        const minutes = Math.floor(otp.timeLeft / 60);
+                        const seconds = otp.timeLeft % 60;
+                        const timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                        const urgentClass = otp.expiringSoon ? 'style="border-left-color: #dc3545; background: #fff5f5;"' : '';
+                        const urgentIcon = otp.expiringSoon ? '⚠️ ' : '🔐 ';
+                        
+                        return `
+                            <div class="otp-item" ${urgentClass}>
+                                <div class="otp-details">
+                                    <div class="otp-email">${urgentIcon}${otp.email}</div>
+                                    <div class="otp-code">OTP: ${otp.otp}</div>
+                                    <div class="otp-time">
+                                        ⏱️ Expires in: ${timeDisplay} | 
+                                        📅 Generated: ${new Date(otp.generated).toLocaleString()}
+                                    </div>
+                                </div>
+                                <button class="delete-btn" onclick="deleteOTP('${otp.id}', '${otp.email}')" title="Delete OTP">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+            } catch (error) {
+                console.error('Error loading active OTPs:', error);
+                otpListDiv.innerHTML = '<div class="error">❌ Error loading OTPs. Please refresh the page.</div>';
+            }
+        };
+
+        window.deleteOTP = async function(docId, email) {
+            if (!confirm(`Are you sure you want to delete the OTP for ${email}?`)) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'otps', docId));
+                console.log(`OTP deleted for ${email}`);
+            } catch (error) {
+                console.error('Error deleting OTP:', error);
+                alert('Error deleting OTP. Please try again.');
+            }
+        };
+
+        // Set up real-time listener for OTP collection
+        function setupRealTimeListener() {
+            const otpsCollection = collection(db, 'otps');
+            realTimeListener = onSnapshot(otpsCollection, (snapshot) => {
+                console.log('Real-time update detected');
+                loadActiveOTPs();
+            }, (error) => {
+                console.error('Real-time listener error:', error);
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            loadActiveOTPs();
+            setupRealTimeListener();
+            
+            // Auto-focus email input
+            document.getElementById('emailInput').focus();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (realTimeListener) {
+                realTimeListener();
+            }
+        });
+
+        // Allow Enter key to generate OTP
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.activeElement.id === 'emailInput') {
+                generateOTP();
+            }
+        });
+
+        // Auto-refresh every 15 seconds as backup
+        setInterval(loadActiveOTPs, 15000);
+
+        console.log('OTP Generator Admin Panel Initialized');
+        console.log('Site URL: https://alessiadeflamme.github.io/SpacedRepetitionScheduler/');
+    </script>
+</body>
+</html>
